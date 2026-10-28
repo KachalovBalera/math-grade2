@@ -25,6 +25,7 @@ interface HomeScreenProps {
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
   const [stats, setStats] = useState<UserStats>(DEFAULT_USER_STATS);
+  const [curriculumCount, setCurriculumCount] = useState<number>(12);
   const [parentModalVisible, setParentModalVisible] = useState(false);
   const [availableUpdate, setAvailableUpdate] = useState<AppUpdateInfo | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState<boolean>(false);
@@ -74,6 +75,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
   const loadUserStats = async () => {
     const s = await StorageService.loadStats();
     setStats(s);
+    const cur = await StorageService.getCurriculumTopics();
+    setCurriculumCount(cur.length);
   };
 
   // Вычисляем процент общего прогресса
@@ -97,10 +100,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
         {/* Верхняя шапка */}
         <View style={styles.header}>
           <View style={styles.headerTitleRow}>
-            <Text style={styles.headerIcon}>📚</Text>
+            <Text style={styles.headerIcon}>🧮</Text>
             <View>
-              <Text style={styles.appName}>Математика — 2 класс</Text>
-              <Text style={styles.appSubtitle}>Интерактивный тренажёр v{CURRENT_APP_VERSION}</Text>
+              <Text style={styles.appName}>Считайка</Text>
+              <Text style={styles.appSubtitle}>Математика — 2 класс (v{CURRENT_APP_VERSION})</Text>
             </View>
           </View>
 
@@ -115,6 +118,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
                 <Text style={styles.updateBadgeText}>Обновить!</Text>
               </TouchableOpacity>
             )}
+
+            {/* Кнопка настроек программы */}
+            <TouchableOpacity
+              style={styles.settingsBtn}
+              onPress={() => onNavigate('curriculumSettings')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.settingsBtnIcon}>⚙️</Text>
+              <Text style={styles.settingsBtnText}>Программа</Text>
+            </TouchableOpacity>
 
             {/* Кнопка раздела родителей */}
             <TouchableOpacity
@@ -199,6 +212,26 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
             </Text>
           </View>
           <Text style={styles.primaryActionArrow}>➔</Text>
+        </TouchableOpacity>
+
+        {/* Баннер пройденного материала в школе */}
+        <TouchableOpacity
+          style={styles.curriculumBanner}
+          onPress={() => onNavigate('curriculumSettings')}
+          activeOpacity={0.85}
+        >
+          <View style={styles.curriculumBannerIconBox}>
+            <Text style={styles.curriculumBannerIcon}>🎒</Text>
+          </View>
+          <View style={styles.curriculumBannerTextCol}>
+            <Text style={styles.curriculumBannerTitle}>
+              Школьная программа (учебник Моро)
+            </Text>
+            <Text style={styles.curriculumBannerSub}>
+              Изучено в школе: {curriculumCount} из 12 тем • Тренировка дня подстроена
+            </Text>
+          </View>
+          <Text style={styles.curriculumBannerArrow}>⚙️</Text>
         </TouchableOpacity>
 
         {/* Сетка основных разделов */}
@@ -445,6 +478,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#10B981',
   },
+  settingsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    gap: 4,
+  },
+  settingsBtnIcon: {
+    fontSize: 14,
+  },
+  settingsBtnText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#334155',
+  },
   parentBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -555,6 +607,44 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
     marginLeft: 8,
+  },
+  curriculumBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EEF2FF',
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: '#818CF8',
+    padding: 14,
+    marginBottom: 20,
+    gap: 12,
+  },
+  curriculumBannerIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#E0E7FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  curriculumBannerIcon: {
+    fontSize: 22,
+  },
+  curriculumBannerTextCol: {
+    flex: 1,
+  },
+  curriculumBannerTitle: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#312E81',
+    marginBottom: 2,
+  },
+  curriculumBannerSub: {
+    fontSize: 12,
+    color: '#4338CA',
+  },
+  curriculumBannerArrow: {
+    fontSize: 18,
   },
   sectionHeading: {
     fontSize: 18,

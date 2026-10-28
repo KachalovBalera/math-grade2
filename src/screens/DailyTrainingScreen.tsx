@@ -18,11 +18,16 @@ import { StorageService, DEFAULT_USER_STATS } from '../services/storage';
 
 interface DailyTrainingScreenProps {
   onBack: () => void;
+  onOpenCurriculum?: () => void;
 }
 
-export const DailyTrainingScreen: React.FC<DailyTrainingScreenProps> = ({ onBack }) => {
+export const DailyTrainingScreen: React.FC<DailyTrainingScreenProps> = ({
+  onBack,
+  onOpenCurriculum,
+}) => {
   const [questions, setQuestions] = useState<MathQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [curriculumCount, setCurriculumCount] = useState<number>(12);
   const [userInput, setUserInput] = useState<string>('');
   const [step1Input, setStep1Input] = useState<string>('');
   const [step2Input, setStep2Input] = useState<string>('');
@@ -36,9 +41,13 @@ export const DailyTrainingScreen: React.FC<DailyTrainingScreenProps> = ({ onBack
   const [stats, setStats] = useState<UserStats>(DEFAULT_USER_STATS);
 
   useEffect(() => {
-    StorageService.loadStats().then(s => {
+    Promise.all([
+      StorageService.loadStats(),
+      StorageService.getCurriculumTopics(),
+    ]).then(([s, curTopics]) => {
       setStats(s);
-      generateAdaptiveDailyWorkout(s).then(qList => {
+      setCurriculumCount(curTopics.length);
+      generateAdaptiveDailyWorkout(s, curTopics).then(qList => {
         setQuestions(qList);
       });
     });
@@ -181,6 +190,24 @@ export const DailyTrainingScreen: React.FC<DailyTrainingScreenProps> = ({ onBack
         streak={stats.streakDays}
       />
       <ScrollView contentContainerStyle={styles.scroll}>
+        {/* Индикатор школьной программы */}
+        <View style={styles.curriculumChipRow}>
+          <View style={styles.curriculumChip}>
+            <Text style={styles.curriculumChipText}>
+              📚 По программе: {curriculumCount} из 12 тем
+            </Text>
+          </View>
+          {onOpenCurriculum && (
+            <TouchableOpacity
+              style={styles.curriculumEditBtn}
+              onPress={onOpenCurriculum}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.curriculumEditText}>⚙️ Настроить</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
         {/* Индикатор прогресса */}
         <View style={styles.progressBarWrapper}>
           <View
@@ -319,6 +346,38 @@ const styles = StyleSheet.create({
   loadingText: { fontSize: 16, color: '#64748B' },
   scroll: { padding: 16, alignItems: 'center', maxWidth: 540, width: '100%', alignSelf: 'center' },
   progressBarWrapper: { width: '100%', height: 8, backgroundColor: '#E2E8F0', borderRadius: 4, overflow: 'hidden', marginBottom: 12 },
+  curriculumChipRow: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingHorizontal: 2,
+  },
+  curriculumChip: {
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+  },
+  curriculumChipText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#4338CA',
+  },
+  curriculumEditBtn: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  curriculumEditText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#475569',
+  },
   progressBarFill: { height: '100%', backgroundColor: '#D97706' },
   card: { width: '100%', backgroundColor: '#FFFFFF', borderRadius: 20, padding: 18, alignItems: 'center', borderWidth: 2, borderColor: '#E2E8F0', marginBottom: 14 },
   topicBadge: { fontSize: 13, fontWeight: 'bold', color: '#D97706', marginBottom: 8 },

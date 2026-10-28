@@ -4,6 +4,9 @@ import { generateBracketQuestion } from '../src/engine/brackets';
 import { generateEquationQuestion } from '../src/engine/equations';
 import { generateGeometryQuestion } from '../src/engine/geometry';
 import { generateMultiplicationQuestion } from '../src/engine/multiplication';
+import { generateAdaptiveDailyWorkout } from '../src/engine/dailyTraining';
+import { DEFAULT_USER_STATS } from '../src/services/storage';
+import { SCHOOL_CURRICULUM_TOPICS } from '../src/data/curriculum';
 import { TenTarget } from '../src/types/math';
 
 let totalTests = 0;
@@ -137,15 +140,43 @@ for (const t of topics) {
 }
 console.log(`✅ Банк заданий содержит ${totalBankQuestions} проверенных заданий по всем темам (>=20 на каждую тему).\n`);
 
-console.log('═════════════════════════════════════════════════════');
-console.log(`ИТОГИ ТЕСТИРОВАНИЯ:`);
-console.log(`Всего проверок: ${totalTests}`);
-console.log(`Успешно пройдено: ${passedTests}`);
-console.log(`Ошибок: ${failedTests}`);
-console.log('═════════════════════════════════════════════════════');
+async function runAsyncTests() {
+  // 6. ТЕСТИРОВАНИЕ ФИЛЬТРАЦИИ ЕЖЕДНЕВНОЙ ТРЕНИРОВКИ ПО ШКОЛЬНОЙ ПРОГРАММЕ
+  console.log('6. Проверка фильтрации заданий «Тренировки дня» по пройденным темам:');
+  assert(SCHOOL_CURRICULUM_TOPICS.length === 12, 'Школьная программа содержит ровно 12 тем по учебнику Моро');
 
-if (failedTests > 0) {
-  process.exit(1);
-} else {
-  console.log('🎉 ВСЕ МАТЕМАТИЧЕСКИЕ И ЛОГИЧЕСКИЕ ПРОВЕРКИ ПРОЙДЕНЫ НА 100%!');
+  // Проверяем тренировку только для 1-й четверти (темы bonds, numbers, measurements, geometry)
+  const quarter1Topics = ['bonds', 'numbers', 'measurements', 'geometry'] as const;
+  const dailyQs = await generateAdaptiveDailyWorkout(DEFAULT_USER_STATS, [...quarter1Topics]);
+
+  assert(dailyQs.length === 10, `Тренировка дня должна содержать 10 вопросов (получено: ${dailyQs.length})`);
+  for (const q of dailyQs) {
+    assert(
+      quarter1Topics.includes(q.topicId as any),
+      `Вопрос дня ${q.id || q.title} принадлежит теме 1-й четверти (${q.topicId})`
+    );
+    assert(
+      q.topicId !== 'multiplication' && q.topicId !== 'equations' && q.topicId !== 'brackets',
+      `В тренировку 1-й четверти не попал непройденный материал (${q.topicId})`
+    );
+  }
+  console.log('✅ Фильтрация ежедневной тренировки по пройденному материалу работает строго и безошибочно!\n');
+
+  console.log('═════════════════════════════════════════════════════');
+  console.log(`ИТОГИ ТЕСТИРОВАНИЯ:`);
+  console.log(`Всего проверок: ${totalTests}`);
+  console.log(`Успешно пройдено: ${passedTests}`);
+  console.log(`Ошибок: ${failedTests}`);
+  console.log('═════════════════════════════════════════════════════');
+
+  if (failedTests > 0) {
+    process.exit(1);
+  } else {
+    console.log('🎉 ВСЕ МАТЕМАТИЧЕСКИЕ И ЛОГИЧЕСКИЕ ПРОВЕРКИ ПРОЙДЕНЫ НА 100%!');
+  }
 }
+
+runAsyncTests().catch(err => {
+  console.error('Ошибка тестов:', err);
+  process.exit(1);
+});

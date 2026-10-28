@@ -1,10 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserStats, ErrorRecord, Achievement, TopicId, TenTarget, MathQuestion, DifficultyLevel } from '../types/math';
 import { INITIAL_ACHIEVEMENTS } from '../data/achievements';
+import { DEFAULT_CURRICULUM_TOPIC_IDS } from '../data/curriculum';
 
 const STATS_KEY = '@math_app_stats_v1';
 const ERRORS_KEY = '@math_app_errors_v1';
 const ACHIEVEMENTS_KEY = '@math_app_achievements_v1';
+const CURRICULUM_KEY = '@math_app_curriculum_topics_v2';
 
 const DEFAULT_TOPIC_PROGRESS = {
   numbers: { level: 1 as DifficultyLevel, solvedCount: 0, correctCount: 0, stars: 0 },
@@ -261,5 +263,35 @@ export class StorageService {
       await AsyncStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(list));
     }
     return list;
+  }
+
+  /**
+   * Получает список ID тем школьной программы, отмеченных как изученные.
+   */
+  static async getCurriculumTopics(): Promise<TopicId[]> {
+    try {
+      const json = await AsyncStorage.getItem(CURRICULUM_KEY);
+      if (json) {
+        const parsed = JSON.parse(json);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed as TopicId[];
+        }
+      }
+    } catch (e) {
+      console.warn('StorageService getCurriculumTopics error:', e);
+    }
+    return [...DEFAULT_CURRICULUM_TOPIC_IDS];
+  }
+
+  /**
+   * Сохраняет список ID тем школьной программы, отмеченных как изученные.
+   */
+  static async saveCurriculumTopics(topicIds: TopicId[]): Promise<void> {
+    try {
+      const valid = topicIds.length > 0 ? topicIds : [DEFAULT_CURRICULUM_TOPIC_IDS[0]];
+      await AsyncStorage.setItem(CURRICULUM_KEY, JSON.stringify(valid));
+    } catch (e) {
+      console.warn('StorageService saveCurriculumTopics error:', e);
+    }
   }
 }

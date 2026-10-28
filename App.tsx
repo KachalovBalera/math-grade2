@@ -13,6 +13,7 @@ import { DailyTrainingScreen } from './src/screens/DailyTrainingScreen';
 import { ErrorReviewScreen } from './src/screens/ErrorReviewScreen';
 import { AchievementsScreen } from './src/screens/AchievementsScreen';
 import { ParentDashboardScreen } from './src/screens/ParentDashboardScreen';
+import { CurriculumSettingsScreen } from './src/screens/CurriculumSettingsScreen';
 
 type ScreenName =
   | 'home'
@@ -23,7 +24,8 @@ type ScreenName =
   | 'daily'
   | 'errors'
   | 'achievements'
-  | 'parentDashboard';
+  | 'parentDashboard'
+  | 'curriculumSettings';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenName>('home');
@@ -78,7 +80,10 @@ export default function App() {
       )}
 
       {currentScreen === 'daily' && (
-        <DailyTrainingScreen onBack={goHome} />
+        <DailyTrainingScreen
+          onBack={goHome}
+          onOpenCurriculum={() => navigate('curriculumSettings')}
+        />
       )}
 
       {currentScreen === 'errors' && (
@@ -90,7 +95,14 @@ export default function App() {
       )}
 
       {currentScreen === 'parentDashboard' && (
-        <ParentDashboardScreen onBack={goHome} />
+        <ParentDashboardScreen
+          onBack={goHome}
+          onOpenCurriculum={() => navigate('curriculumSettings')}
+        />
+      )}
+
+      {currentScreen === 'curriculumSettings' && (
+        <CurriculumSettingsScreen onBack={goHome} />
       )}
     </View>
   );

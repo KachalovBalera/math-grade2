@@ -20,9 +20,13 @@ import { CURRENT_APP_VERSION } from '../constants/updateConfig';
 
 interface ParentDashboardScreenProps {
   onBack: () => void;
+  onOpenCurriculum?: () => void;
 }
 
-export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({ onBack }) => {
+export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({
+  onBack,
+  onOpenCurriculum,
+}) => {
   const [stats, setStats] = useState<UserStats>(DEFAULT_USER_STATS);
   const [availableUpdate, setAvailableUpdate] = useState<AppUpdateInfo | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState<boolean>(false);
@@ -45,7 +49,7 @@ export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({ on
       } else {
         Alert.alert(
           'Обновлений не найдено',
-          `У вас установлена самая свежая версия Математики (${CURRENT_APP_VERSION})! ✨`
+          `У вас установлена самая свежая версия Считайки (${CURRENT_APP_VERSION})! ✨`
         );
       }
     } catch (err: any) {
@@ -81,6 +85,28 @@ export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({ on
     <SafeAreaView style={styles.safeArea}>
       <Header title="Раздел для родителей" onBack={onBack} />
       <ScrollView contentContainerStyle={styles.container}>
+        {/* Карточка управления школьной программой */}
+        {onOpenCurriculum && (
+          <TouchableOpacity
+            style={styles.curriculumParentCard}
+            onPress={onOpenCurriculum}
+            activeOpacity={0.8}
+          >
+            <View style={styles.curriculumParentHeader}>
+              <Text style={styles.curriculumParentEmoji}>🎒</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.curriculumParentTitle}>
+                  Пройденные темы в школе (учебник Моро)
+                </Text>
+                <Text style={styles.curriculumParentSub}>
+                  Отмечайте изученный материал, чтобы тренировка дня подстраивалась под класс.
+                </Text>
+              </View>
+              <Text style={styles.curriculumParentArrow}>➔</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
         {/* Карточка общей сводки */}
         <View style={styles.summaryCard}>
           <Text style={styles.cardHeader}>📊 Общие показатели успеваемости:</Text>
@@ -246,6 +272,39 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#FFFFFF',
+  },
+  curriculumParentCard: {
+    backgroundColor: '#EEF2FF',
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: '#818CF8',
+    padding: 16,
+    marginBottom: 16,
+  },
+  curriculumParentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  curriculumParentEmoji: {
+    fontSize: 28,
+  },
+  curriculumParentTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#312E81',
+    marginBottom: 4,
+  },
+  curriculumParentSub: {
+    fontSize: 12,
+    color: '#4338CA',
+    lineHeight: 16,
+  },
+  curriculumParentArrow: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#4F46E5',
+    marginLeft: 4,
   },
   summaryCard: {
     backgroundColor: '#FFFFFF',
