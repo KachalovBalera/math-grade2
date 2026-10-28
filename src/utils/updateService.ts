@@ -7,6 +7,45 @@ import { compareVersions } from './versionUtils';
 
 export { compareVersions };
 
+const DEFAULT_APK_FILENAME = 'Schitayka_update.apk';
+
+/**
+ * Возвращает локальный путь к кэшированному APK-файлу обновления
+ */
+export function getLocalApkUri(fileName: string = DEFAULT_APK_FILENAME): string {
+  return `${FileSystem.cacheDirectory}${fileName}`;
+}
+
+/**
+ * Проверяет наличие уже скачанного файла APK
+ */
+export async function isApkDownloaded(
+  fileName: string = DEFAULT_APK_FILENAME
+): Promise<{ exists: boolean; uri: string; size?: number }> {
+  try {
+    const uri = getLocalApkUri(fileName);
+    const info = await FileSystem.getInfoAsync(uri);
+    if (info.exists && !info.isDirectory && info.size && info.size > 5 * 1024 * 1024) {
+      return { exists: true, uri, size: info.size };
+    }
+    return { exists: false, uri };
+  } catch {
+    return { exists: false, uri: getLocalApkUri(fileName) };
+  }
+}
+
+/**
+ * Удаляет кэшированный файл APK
+ */
+export async function deleteCachedApk(fileName: string = DEFAULT_APK_FILENAME): Promise<void> {
+  try {
+    const uri = getLocalApkUri(fileName);
+    await FileSystem.deleteAsync(uri, { idempotent: true });
+  } catch (e) {
+    console.warn('Не удалось удалить кэшированный APK:', e);
+  }
+}
+
 /**
  * Проверяет наличие новой версии на удаленном сервере
  */
@@ -53,70 +92,95 @@ export async function checkForUpdates(
 }
 
 /**
- * Скачивает APK с отслеживанием прогресса и запускает нативный установщик Android
+ * Скачивает установочный APK файл во временный кэш приложения
+ */
+export async function downloadApk(
+  apkUrl: string,
+  onProgress: (progressFraction: number) => void,
+  fileName: string = DEFAULT_APK_FILENAME
+): Promise<string> {
+  const localTargetUri = getLocalApkUri(fileName);
+
+  // Очищаем предыдущий временный файл, если он был неполным
+  await FileSystem.deleteAsync(localTargetUri, { idempotent: true });
+
+  const downloadResumable = FileSystem.createDownloadResumable(
+    apkUrl,
+    localTargetUri,
+    {},
+    downloadProgress => {
+      const total = downloadProgress.totalBytesExpectedToWrite;
+      const written = downloadProgress.totalBytesWritten;
+      if (total > 0) {
+        const fraction = Math.min(Math.max(written / total, 0), 1);
+        onProgress(fraction);
+      } else {
+        onProgress(0.5);
+      }
+    }
+  );
+
+  const downloadResult = await downloadResumable.downloadAsync();
+
+  if (!downloadResult || !downloadResult.uri) {
+    throw new Error('Файл обновления не был загружен.');
+  }
+
+  onProgress(1.0);
+  return downloadResult.uri;
+}
+
+/**
+ * Запускает системный установщик Android (PackageInstaller) для локального APK файла
+ */
+export async function installApk(localFileUri: string): Promise<void> {
+  if (Platform.OS !== 'android') {
+    throw new Error('Установка APK поддерживается только на Android');
+  }
+
+  // Преобразуем локальный file:// URI в content:// URI через Expo FileProvider
+  const contentUri = await FileSystem.getContentUriAsync(localFileUri);
+
+  // Флаги: FLAG_GRANT_READ_URI_PERMISSION (1) | FLAG_ACTIVITY_NEW_TASK (268435456) = 268435457
+  const flags = 1 | 268435456;
+
+  try {
+    await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+      data: contentUri,
+      flags,
+      type: 'application/vnd.android.package-archive',
+    });
+  } catch (err: any) {
+    throw new Error(
+      `Система Android отклонила запуск установщика (${err?.message || 'ошибка доступа'}). ` +
+      `Пожалуйста, разрешите установку приложений в настройках или скачайте файл через браузер.`
+    );
+  }
+}
+
+/**
+ * Открывает прямую ссылку на APK в мобильном браузере
+ */
+export async function openApkInBrowser(apkUrl: string): Promise<void> {
+  const canOpen = await Linking.canOpenURL(apkUrl);
+  if (!canOpen) {
+    throw new Error('Не удалось открыть ссылку в браузере устройства.');
+  }
+  await Linking.openURL(apkUrl);
+}
+
+/**
+ * Комплексный метод: скачивание и запуск установки (для обратной совместимости)
  */
 export async function downloadAndInstallApk(
   apkUrl: string,
   onProgress: (progressFraction: number) => void
 ): Promise<void> {
-  // На не-Android платформах (или в веб-браузере) просто открываем прямую ссылку
   if (Platform.OS !== 'android') {
-    await Linking.openURL(apkUrl);
+    await openApkInBrowser(apkUrl);
     return;
   }
 
-  const targetFileName = 'Math_Grade2_Update.apk';
-  const localTargetUri = `${FileSystem.cacheDirectory}${targetFileName}`;
-
-  try {
-    // Удаляем старый файл, если он остался
-    const fileInfo = await FileSystem.getInfoAsync(localTargetUri);
-    if (fileInfo.exists) {
-      await FileSystem.deleteAsync(localTargetUri, { idempotent: true });
-    }
-
-    // Запускаем скачивание с индикацией прогресса
-    const downloadResumable = FileSystem.createDownloadResumable(
-      apkUrl,
-      localTargetUri,
-      {},
-      downloadProgress => {
-        const total = downloadProgress.totalBytesExpectedToWrite;
-        const written = downloadProgress.totalBytesWritten;
-        if (total > 0) {
-          const fraction = Math.min(Math.max(written / total, 0), 1);
-          onProgress(fraction);
-        } else {
-          onProgress(0.5);
-        }
-      }
-    );
-
-    const downloadResult = await downloadResumable.downloadAsync();
-
-    if (!downloadResult || !downloadResult.uri) {
-      throw new Error('Файл обновления не был загружен.');
-    }
-
-    onProgress(1.0);
-
-    // Получаем content:// URI для системного PackageInstaller Android
-    const contentUri = await FileSystem.getContentUriAsync(downloadResult.uri);
-
-    // Запускаем установку
-    await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
-      data: contentUri,
-      flags: 1, // FLAG_GRANT_READ_URI_PERMISSION
-      type: 'application/vnd.android.package-archive',
-    });
-  } catch (err: any) {
-    console.warn('Ошибка автоматической установки APK, открываем ссылку в браузере:', err);
-    try {
-      await Linking.openURL(apkUrl);
-    } catch {
-      throw new Error(
-        `Не удалось запустить установщик: ${err?.message || 'ошибка доступа'}`
-      );
-    }
-  }
+  const localUri = await downloadApk(apkUrl, onProgress);
+  await installApk(localUri);
 }
