@@ -128,6 +128,28 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
           </View>
         </View>
 
+        {/* Баннер доступного обновления (как в Грамотейке) */}
+        {availableUpdate && (
+          <TouchableOpacity
+            style={styles.updateBanner}
+            onPress={() => setShowUpdateModal(true)}
+            activeOpacity={0.85}
+          >
+            <View style={styles.updateBannerIconBox}>
+              <Text style={styles.updateBannerIcon}>🚀</Text>
+            </View>
+            <View style={styles.updateBannerTextCol}>
+              <Text style={styles.updateBannerTitle}>
+                Доступно обновление v{availableUpdate.version}!
+              </Text>
+              <Text style={styles.updateBannerSub}>
+                Нажмите здесь, чтобы посмотреть список улучшений и обновиться
+              </Text>
+            </View>
+            <Text style={styles.updateBannerArrow}>➔</Text>
+          </TouchableOpacity>
+        )}
+
         {/* Индикаторы прогресса, звёзд и серии дней */}
         <View style={styles.statusBar}>
           <View style={styles.statusItem}>
@@ -376,6 +398,52 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     color: '#065F46',
+  },
+  updateBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 2,
+    borderColor: '#10B981',
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 16,
+    gap: 12,
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  updateBannerIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#D1FAE5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  updateBannerIcon: {
+    fontSize: 22,
+  },
+  updateBannerTextCol: {
+    flex: 1,
+  },
+  updateBannerTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#065F46',
+    marginBottom: 2,
+  },
+  updateBannerSub: {
+    fontSize: 12,
+    color: '#047857',
+    lineHeight: 16,
+  },
+  updateBannerArrow: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#10B981',
   },
   parentBtn: {
     flexDirection: 'row',
