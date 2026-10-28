@@ -8,7 +8,7 @@
 
 ## 🚀 Скачать готовый APK (Android)
 
-- 📲 **[Скачать Считайка (v1.0.3 APK)](https://github.com/KachalovBalera/math-grade2/releases/download/v1.0.3/Schitayka_v1.0.3.apk)**
+- 📲 **[Скачать Считайка (v1.0.4 APK)](https://github.com/KachalovBalera/math-grade2/releases/download/v1.0.4/Schitayka_v1.0.4.apk)**
 - Репозиторий GitHub: **[KachalovBalera/math-grade2](https://github.com/KachalovBalera/math-grade2)**
 
 ---

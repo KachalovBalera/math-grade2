@@ -390,6 +390,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
+    paddingTop: 8,
   },
   headerTitleRow: {
     flexDirection: 'row',

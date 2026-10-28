@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, View, Platform, StatusBar, SafeAreaView } from 'react-native';
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { TopicId } from './src/types/math';
 
 // Экраны
@@ -41,74 +41,79 @@ export default function App() {
     setScreenParams({});
   };
 
+  const renderScreen = () => {
+    switch (currentScreen) {
+      case 'home':
+        return (
+          <HomeScreen
+            onNavigate={(screen, params) => navigate(screen as ScreenName, params)}
+          />
+        );
+      case 'topics':
+        return (
+          <TopicsScreen
+            onBack={goHome}
+            onSelectTopic={(topicId: TopicId) => {
+              if (topicId === 'tenTransition') {
+                navigate('tenTransition');
+              } else if (topicId === 'brackets') {
+                navigate('brackets');
+              } else {
+                navigate('quiz', { topicId });
+              }
+            }}
+          />
+        );
+      case 'tenTransition':
+        return <TenTransitionScreen onBack={goHome} />;
+      case 'brackets':
+        return <BracketsScreen onBack={goHome} />;
+      case 'quiz':
+        return (
+          <QuizScreen
+            topicId={screenParams.topicId || 'numbers'}
+            onBack={() => navigate('topics')}
+          />
+        );
+      case 'daily':
+        return (
+          <DailyTrainingScreen
+            onBack={goHome}
+            onOpenCurriculum={() => navigate('curriculumSettings')}
+          />
+        );
+      case 'errors':
+        return <ErrorReviewScreen onBack={goHome} />;
+      case 'achievements':
+        return <AchievementsScreen onBack={goHome} />;
+      case 'parentDashboard':
+        return (
+          <ParentDashboardScreen
+            onBack={goHome}
+            onOpenCurriculum={() => navigate('curriculumSettings')}
+          />
+        );
+      case 'curriculumSettings':
+        return <CurriculumSettingsScreen onBack={goHome} />;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
-
-      {currentScreen === 'home' && (
-        <HomeScreen onNavigate={(screen, params) => navigate(screen as ScreenName, params)} />
-      )}
-
-      {currentScreen === 'topics' && (
-        <TopicsScreen
-          onBack={goHome}
-          onSelectTopic={(topicId: TopicId) => {
-            if (topicId === 'tenTransition') {
-              navigate('tenTransition');
-            } else if (topicId === 'brackets') {
-              navigate('brackets');
-            } else {
-              navigate('quiz', { topicId });
-            }
-          }}
-        />
-      )}
-
-      {currentScreen === 'tenTransition' && (
-        <TenTransitionScreen onBack={goHome} />
-      )}
-
-      {currentScreen === 'brackets' && (
-        <BracketsScreen onBack={goHome} />
-      )}
-
-      {currentScreen === 'quiz' && (
-        <QuizScreen
-          topicId={screenParams.topicId || 'numbers'}
-          onBack={() => navigate('topics')}
-        />
-      )}
-
-      {currentScreen === 'daily' && (
-        <DailyTrainingScreen
-          onBack={goHome}
-          onOpenCurriculum={() => navigate('curriculumSettings')}
-        />
-      )}
-
-      {currentScreen === 'errors' && (
-        <ErrorReviewScreen onBack={goHome} />
-      )}
-
-      {currentScreen === 'achievements' && (
-        <AchievementsScreen onBack={goHome} />
-      )}
-
-      {currentScreen === 'parentDashboard' && (
-        <ParentDashboardScreen
-          onBack={goHome}
-          onOpenCurriculum={() => navigate('curriculumSettings')}
-        />
-      )}
-
-      {currentScreen === 'curriculumSettings' && (
-        <CurriculumSettingsScreen onBack={goHome} />
-      )}
-    </View>
+    <SafeAreaView style={styles.safeArea}>
+      <ExpoStatusBar style="dark" />
+      <View style={styles.container}>{renderScreen()}</View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) : 0,
+  },
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
