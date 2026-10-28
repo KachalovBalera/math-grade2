@@ -6,6 +6,14 @@
 
 ---
 
+## 🚀 Скачать готовый APK (Android)
+
+- 📲 **[Скачать Математика — 2 класс (v1.0.1 APK)](https://github.com/KachalovBalera/math-grade2/releases/download/v1.0.1/Matematika_v1.0.1.apk)**
+- Репозиторий GitHub: **[KachalovBalera/math-grade2](https://github.com/KachalovBalera/math-grade2)**
+- Файл также сохранён локально в корне проекта: `Математика_v1.0.1.apk`.
+
+---
+
 ## 🌟 Ключевые возможности и особенности
 
 1. **Дружелюбный детский интерфейс (7–9 лет):**
