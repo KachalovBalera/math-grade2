@@ -119,14 +119,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
               </TouchableOpacity>
             )}
 
-            {/* Кнопка настроек программы */}
+            {/* Кнопка настроек */}
             <TouchableOpacity
               style={styles.settingsBtn}
               onPress={() => onNavigate('curriculumSettings')}
               activeOpacity={0.7}
             >
               <Text style={styles.settingsBtnIcon}>⚙️</Text>
-              <Text style={styles.settingsBtnText}>Программа</Text>
+              <Text style={styles.settingsBtnText}>Настройки</Text>
             </TouchableOpacity>
 
             {/* Кнопка раздела родителей */}

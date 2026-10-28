@@ -16,6 +16,7 @@ import {
   CURRICULUM_PRESETS,
   DEFAULT_CURRICULUM_TOPIC_IDS,
 } from '../data/curriculum';
+import { AppShareSection } from '../components/AppShareSection';
 
 interface CurriculumSettingsScreenProps {
   onBack: () => void;
@@ -112,8 +113,8 @@ export const CurriculumSettingsScreen: React.FC<CurriculumSettingsScreenProps> =
           <Text style={styles.backButtonText}>← Назад</Text>
         </TouchableOpacity>
         <View style={styles.headerTitleCol}>
-          <Text style={styles.headerTitle}>Пройденный материал</Text>
-          <Text style={styles.headerSub}>Учебник Моро «Школа России»</Text>
+          <Text style={styles.headerTitle}>Настройки приложения</Text>
+          <Text style={styles.headerSub}>Школьная программа и ссылки</Text>
         </View>
         <View style={{ width: 60 }} />
       </View>
@@ -230,6 +231,12 @@ export const CurriculumSettingsScreen: React.FC<CurriculumSettingsScreenProps> =
             })}
           </View>
         ))}
+
+        {/* Раздел: Поделиться приложением и приложение Грамотейка */}
+        <View style={styles.shareSectionWrapper}>
+          <Text style={styles.shareSectionTitle}>🔗 Поделиться и другие приложения:</Text>
+          <AppShareSection />
+        </View>
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -516,5 +523,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#FFFFFF',
+  },
+  shareSectionWrapper: {
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  shareSectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#1E293B',
+    marginBottom: 12,
+    paddingHorizontal: 4,
   },
 });

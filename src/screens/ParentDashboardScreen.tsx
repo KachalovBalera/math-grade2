@@ -17,6 +17,7 @@ import { AppUpdateInfo } from '../types/update';
 import { checkForUpdates } from '../utils/updateService';
 import { UpdateModal } from '../components/UpdateModal';
 import { CURRENT_APP_VERSION } from '../constants/updateConfig';
+import { AppShareSection } from '../components/AppShareSection';
 
 interface ParentDashboardScreenProps {
   onBack: () => void;
@@ -198,6 +199,10 @@ export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({
             );
           })}
         </View>
+
+        {/* Поделиться и комплектное приложение Грамотейка */}
+        <Text style={styles.sectionTitle}>🔗 Поделиться и другие приложения:</Text>
+        <AppShareSection style={{ marginBottom: 16 }} />
 
         {/* Блок версии и обновления приложения */}
         <Text style={styles.sectionTitle}>⚙️ О приложении и обновления:</Text>
