@@ -1,8 +1,8 @@
 {
-  "version": "1.0.0",
-  "versionCode": 1,
-  "apkUrl": "https://expo.dev/accounts/balera251991/projects/math-grade2/builds/895f4b03-f6fe-4558-a906-5377b023f713",
-  "releaseNotes": "• Полный интерактивный тренажёр программы 2-го класса\n• Тренажёр переходов через десятки (20-90)\n• Пошаговое решение примеров со скобками (ответ над скобками)\n• Текстовые задачи, уравнения, геометрия и логика\n• Встроенная система автоматических обновлений APK",
+  "version": "1.0.1",
+  "versionCode": 2,
+  "apkUrl": "https://github.com/KachalovBalera/math-grade2/releases/download/v1.0.1/Matematika_v1.0.1.apk",
+  "releaseNotes": "• Новая яркая 3D-иконка приложения «Математика»\n• Удобный баннер обновления на главном экране\n• Все 12 учебных тем 2-го класса с проверками и наградами",
   "forceUpdate": false,
-  "publishDate": "2026-10-27"
+  "publishDate": "2026-10-28"
 }
