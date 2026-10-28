@@ -1,8 +1,8 @@
 {
-  "version": "1.0.3",
-  "versionCode": 4,
-  "apkUrl": "https://github.com/KachalovBalera/math-grade2/releases/download/v1.0.3/Schitayka_v1.0.3.apk",
-  "releaseNotes": "• Исправлена ошибка повторной загрузки обновления\n• Добавлена кнопка «Установить обновление» после завершения загрузки\n• Добавлена возможность скачивания через браузер\n• Добавлено разрешение Android на установку приложений",
+  "version": "1.0.4",
+  "versionCode": 5,
+  "apkUrl": "https://github.com/KachalovBalera/math-grade2/releases/download/v1.0.4/Schitayka_v1.0.4.apk",
+  "releaseNotes": "• Добавлен безопасный отступ сверху (как в Грамотейке)\n• Иконки и кнопки больше не перекрываются статус-баром Android\n• Улучшена верстка шапки на всех экранах",
   "forceUpdate": false,
   "publishDate": "2026-10-28"
 }
