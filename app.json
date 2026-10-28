@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Математика — 2 класс",
+    "slug": "math-grade2",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mathgrade2.app"
+    },
+    "android": {
+      "package": "com.mathgrade2.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#4F46E5",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": []
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "60a720ee-b1c1-43bc-b960-ecc12f74ffa4"
+      }
+    },
+    "owner": "balera251991"
+  }
+}
