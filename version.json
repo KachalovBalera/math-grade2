@@ -1,8 +1,8 @@
 {
-  "version": "1.0.1",
-  "versionCode": 2,
-  "apkUrl": "https://github.com/KachalovBalera/math-grade2/releases/download/v1.0.1/Matematika_v1.0.1.apk",
-  "releaseNotes": "• Новая яркая 3D-иконка приложения «Математика»\n• Удобный баннер обновления на главном экране\n• Все 12 учебных тем 2-го класса с проверками и наградами",
+  "version": "1.0.2",
+  "versionCode": 3,
+  "apkUrl": "https://github.com/KachalovBalera/math-grade2/releases/download/v1.0.2/Schitayka_v1.0.2.apk",
+  "releaseNotes": "• Приложение переименовано в «Считайка»!\n• Добавлены настройки пройденного в школе материала по учебнику Моро (Школа России)\n• Отмечайте галочками темы, пройденные в классе\n• Ежедневные тренировки теперь строятся только по пройденным темам",
   "forceUpdate": false,
   "publishDate": "2026-10-28"
 }
