@@ -1,8 +1,8 @@
 {
-  "version": "1.0.5",
-  "versionCode": 6,
-  "apkUrl": "https://github.com/KachalovBalera/math-grade2/releases/download/v1.0.5/Schitayka_v1.0.5.apk",
-  "releaseNotes": "• Добавлена функция «Поделиться ссылкой» на приложение «Считайка»\n• Добавлена возможность скачать и установить приложение «Грамотейка» (Русский язык 2 класс)\n• Возможность поделиться ссылкой на «Грамотейку»",
+  "version": "1.0.6",
+  "versionCode": 7,
+  "apkUrl": "https://github.com/KachalovBalera/math-grade2/releases/download/v1.0.6/Schitayka_v1.0.6.apk",
+  "releaseNotes": "• Новый современный дизайн приложения по макету!\n• 2-колоночная сетка режимов с пастельными цветами\n• Совушка и баннер быстрого старта\n• Удобная нижняя панель навигации",
   "forceUpdate": false,
-  "publishDate": "2026-10-28"
+  "publishDate": "2026-10-29"
 }
