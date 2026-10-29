@@ -6,14 +6,12 @@ import {
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
+  Image,
   Dimensions,
-  Platform,
-  Alert,
 } from 'react-native';
-import { UserStats, TopicId } from '../types/math';
+import { UserStats } from '../types/math';
 import { StorageService, DEFAULT_USER_STATS } from '../services/storage';
 import { TOPICS } from '../data/topics';
-import { ParentGateModal } from '../components/ParentGateModal';
 import { AppUpdateInfo } from '../types/update';
 import { checkForUpdates } from '../utils/updateService';
 import { UpdateModal } from '../components/UpdateModal';
@@ -25,11 +23,8 @@ interface HomeScreenProps {
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
   const [stats, setStats] = useState<UserStats>(DEFAULT_USER_STATS);
-  const [curriculumCount, setCurriculumCount] = useState<number>(12);
-  const [parentModalVisible, setParentModalVisible] = useState(false);
   const [availableUpdate, setAvailableUpdate] = useState<AppUpdateInfo | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState<boolean>(false);
-  const [isCheckingUpdate, setIsCheckingUpdate] = useState<boolean>(false);
 
   useEffect(() => {
     loadUserStats();
@@ -50,33 +45,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
     }
   };
 
-  const handleManualCheckUpdate = async () => {
-    setIsCheckingUpdate(true);
-    try {
-      const res = await checkForUpdates();
-      setIsCheckingUpdate(false);
-      if (res.hasUpdate && res.updateInfo) {
-        setAvailableUpdate(res.updateInfo);
-        setShowUpdateModal(true);
-      } else if (res.error) {
-        Alert.alert('Проверка обновлений', `Не удалось связаться с сервером: ${res.error}`);
-      } else {
-        Alert.alert(
-          'Обновлений не найдено',
-          `У вас установлена самая свежая версия Математики (${CURRENT_APP_VERSION})! ✨`
-        );
-      }
-    } catch (err: any) {
-      setIsCheckingUpdate(false);
-      Alert.alert('Ошибка', err?.message || 'Не удалось проверить обновления');
-    }
-  };
-
   const loadUserStats = async () => {
     const s = await StorageService.loadStats();
     setStats(s);
-    const cur = await StorageService.getCurriculumTopics();
-    setCurriculumCount(cur.length);
   };
 
   // Вычисляем процент общего прогресса
@@ -92,278 +63,340 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
     Math.round((masteredTopics / totalTopics) * 100)
   );
 
-  const lastTopic = TOPICS.find(t => t.id === stats.lastTopicId) || TOPICS[0];
-
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container}>
-        {/* Верхняя шапка */}
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        {/* 1. ВЕРХНЯЯ ШАПКА ПРИЛОЖЕНИЯ (как на картинке) */}
         <View style={styles.header}>
-          <View style={styles.headerTitleRow}>
-            <Text style={styles.headerIcon}>🧮</Text>
-            <View>
+          <View style={styles.headerLeft}>
+            {/* Иконка приложения (123 + -) */}
+            <View style={styles.appIconBadge}>
+              <Image
+                source={require('../../assets/icon.png')}
+                style={styles.appIconImage}
+                resizeMode="cover"
+              />
+            </View>
+
+            {/* Название и подписи */}
+            <View style={styles.titleColumn}>
               <Text style={styles.appName}>Считайка</Text>
-              <Text style={styles.appSubtitle}>Математика — 2 класс (v{CURRENT_APP_VERSION})</Text>
+              <Text style={styles.appSubtitle}>Математика • 2 класс</Text>
+              <Text style={styles.appMotto}>Учимся с удовольствием!</Text>
             </View>
           </View>
 
-          <View style={styles.headerActions}>
-            {availableUpdate && (
-              <TouchableOpacity
-                style={styles.updateBadgeBtn}
-                onPress={() => setShowUpdateModal(true)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.updateBadgeIcon}>🚀</Text>
-                <Text style={styles.updateBadgeText}>Обновить!</Text>
-              </TouchableOpacity>
-            )}
-
-            {/* Кнопка настроек */}
-            <TouchableOpacity
-              style={styles.settingsBtn}
-              onPress={() => onNavigate('curriculumSettings')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.settingsBtnIcon}>⚙️</Text>
-              <Text style={styles.settingsBtnText}>Настройки</Text>
-            </TouchableOpacity>
-
-            {/* Кнопка раздела родителей */}
-            <TouchableOpacity
-              style={styles.parentBtn}
-              onPress={() => setParentModalVisible(true)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.parentBtnIcon}>👨‍👩‍👧‍👦</Text>
-              <Text style={styles.parentBtnText}>Родителям</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Кнопка «Настройки» в виде белой таблетки */}
+          <TouchableOpacity
+            style={styles.settingsPillBtn}
+            onPress={() => onNavigate('curriculumSettings')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.settingsPillIcon}>⚙️</Text>
+            <Text style={styles.settingsPillText}>Настройки</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Баннер доступного обновления (как в Грамотейке) */}
+        {/* Баннер доступного обновления (если есть) */}
         {availableUpdate && (
           <TouchableOpacity
             style={styles.updateBanner}
             onPress={() => setShowUpdateModal(true)}
             activeOpacity={0.85}
           >
-            <View style={styles.updateBannerIconBox}>
-              <Text style={styles.updateBannerIcon}>🚀</Text>
-            </View>
+            <Text style={styles.updateBannerIcon}>🚀</Text>
             <View style={styles.updateBannerTextCol}>
               <Text style={styles.updateBannerTitle}>
                 Доступно обновление v{availableUpdate.version}!
               </Text>
               <Text style={styles.updateBannerSub}>
-                Нажмите здесь, чтобы посмотреть список улучшений и обновиться
+                Нажмите для быстрой установки в 1 клик
               </Text>
             </View>
             <Text style={styles.updateBannerArrow}>➔</Text>
           </TouchableOpacity>
         )}
 
-        {/* Индикаторы прогресса, звёзд и серии дней */}
-        <View style={styles.statusBar}>
-          <View style={styles.statusItem}>
-            <Text style={styles.statusEmoji}>⭐</Text>
-            <View>
-              <Text style={styles.statusValue}>{stats.totalStars}</Text>
-              <Text style={styles.statusLabel}>Звёзд</Text>
+        {/* 2. ПАНЕЛЬ ПОКАЗАТЕЛЕЙ (Звёзды, Серия, Прогресс) */}
+        <View style={styles.statsCard}>
+          <View style={styles.statColumn}>
+            <Text style={styles.statIcon}>⭐</Text>
+            <View style={styles.statTexts}>
+              <Text style={styles.statValue}>{stats.totalStars}</Text>
+              <Text style={styles.statLabel}>Звёзд</Text>
             </View>
           </View>
 
-          <View style={styles.statusDivider} />
+          <View style={styles.statDivider} />
 
-          <View style={styles.statusItem}>
-            <Text style={styles.statusEmoji}>🔥</Text>
-            <View>
-              <Text style={styles.statusValue}>{stats.streakDays} дн.</Text>
-              <Text style={styles.statusLabel}>Серия</Text>
+          <View style={styles.statColumn}>
+            <Text style={styles.statIcon}>🔥</Text>
+            <View style={styles.statTexts}>
+              <Text style={styles.statValue}>{stats.streakDays} дн.</Text>
+              <Text style={styles.statLabel}>Серия</Text>
             </View>
           </View>
 
-          <View style={styles.statusDivider} />
+          <View style={styles.statDivider} />
 
-          <View style={styles.statusItem}>
-            <Text style={styles.statusEmoji}>🎯</Text>
-            <View>
-              <Text style={styles.statusValue}>{overallProgressPercent}%</Text>
-              <Text style={styles.statusLabel}>Прогресс</Text>
+          <View style={styles.statColumn}>
+            <Text style={styles.statIcon}>🎯</Text>
+            <View style={styles.statTexts}>
+              <Text style={styles.statValue}>{overallProgressPercent}%</Text>
+              <Text style={styles.statLabel}>Прогресс</Text>
             </View>
           </View>
         </View>
 
-        {/* Главная кнопка: Начать заниматься / Продолжить обучение */}
+        {/* 3. ГЛАВНЫЙ БАННЕР «НАЧАТЬ ЗАНИМАТЬСЯ» С СОВУШКОЙ */}
         <TouchableOpacity
-          style={styles.primaryActionButton}
-          onPress={() => onNavigate('quiz', { topicId: stats.lastTopicId || 'numbers' })}
-          activeOpacity={0.85}
+          style={styles.heroCard}
+          onPress={() => onNavigate('daily')}
+          activeOpacity={0.9}
         >
-          <View style={styles.actionIconContainer}>
-            <Text style={styles.primaryActionIcon}>🚀</Text>
-          </View>
-          <View style={styles.primaryActionTexts}>
-            <Text style={styles.primaryActionTitle}>
-              {stats.totalSolved > 0 ? 'Продолжить обучение' : 'Начать заниматься'}
+          {/* Совушка с книжкой */}
+          <Image
+            source={require('../../assets/ui/hero_owl.png')}
+            style={styles.heroOwlImage}
+            resizeMode="contain"
+          />
+
+          {/* Текст по центру */}
+          <View style={styles.heroTextCol}>
+            <Text style={styles.heroTitle}>Начать заниматься</Text>
+            <Text style={styles.heroSubtitle}>
+              Выбери тему и переходи к заданиям
             </Text>
-            <Text style={styles.primaryActionSubtitle}>
-              Тема: {lastTopic.title} (Уровень {stats.topicProgress[lastTopic.id]?.level || 1})
-            </Text>
           </View>
-          <Text style={styles.primaryActionArrow}>➔</Text>
+
+          {/* Фоновые математические формулы и стрелка */}
+          <View style={styles.heroRight}>
+            <Text style={styles.faintMath1}>2+2</Text>
+            <Text style={styles.faintMath2}>5-3</Text>
+            <Text style={styles.faintStar}>★</Text>
+            <View style={styles.heroArrowBtn}>
+              <Text style={styles.heroArrowText}>➔</Text>
+            </View>
+          </View>
         </TouchableOpacity>
 
-        {/* Баннер пройденного материала в школе */}
-        <TouchableOpacity
-          style={styles.curriculumBanner}
-          onPress={() => onNavigate('curriculumSettings')}
-          activeOpacity={0.85}
-        >
-          <View style={styles.curriculumBannerIconBox}>
-            <Text style={styles.curriculumBannerIcon}>🎒</Text>
-          </View>
-          <View style={styles.curriculumBannerTextCol}>
-            <Text style={styles.curriculumBannerTitle}>
-              Школьная программа (учебник Моро)
-            </Text>
-            <Text style={styles.curriculumBannerSub}>
-              Изучено в школе: {curriculumCount} из 12 тем • Тренировка дня подстроена
-            </Text>
-          </View>
-          <Text style={styles.curriculumBannerArrow}>⚙️</Text>
-        </TouchableOpacity>
-
-        {/* Сетка основных разделов */}
+        {/* 4. ЗАГОЛОВОК СЕКЦИИ */}
         <Text style={styles.sectionHeading}>Выбери режим занятий:</Text>
 
-        <View style={styles.grid}>
+        {/* 5. СЕТКА РЕЖИМОВ ОБУЧЕНИЯ (2 колонки) */}
+        <View style={styles.gridContainer}>
           {/* 1. Тренировка дня */}
           <TouchableOpacity
-            style={[styles.menuCard, { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' }]}
+            style={[styles.modeCard, styles.cardYellow]}
             onPress={() => onNavigate('daily')}
             activeOpacity={0.8}
           >
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardEmoji}>🌟</Text>
-              <View style={styles.badgeDaily}>
-                <Text style={styles.badgeDailyText}>Каждый день</Text>
+            <View style={styles.cardTopRow}>
+              {/* Блоки 1 2 3 */}
+              <View style={styles.blockRow}>
+                <View style={[styles.miniBlock, { backgroundColor: '#22C55E' }]}>
+                  <Text style={styles.miniBlockText}>1</Text>
+                </View>
+                <View style={[styles.miniBlock, { backgroundColor: '#3B82F6' }]}>
+                  <Text style={styles.miniBlockText}>2</Text>
+                </View>
+                <View style={[styles.miniBlock, { backgroundColor: '#EF4444' }]}>
+                  <Text style={styles.miniBlockText}>3</Text>
+                </View>
+              </View>
+
+              <View style={styles.badgeOrange}>
+                <Text style={styles.badgeOrangeText}>Каждый день</Text>
               </View>
             </View>
-            <Text style={styles.cardTitle}>Тренировка дня</Text>
-            <Text style={styles.cardDesc}>10 индивидуальных заданий</Text>
+
+            <View style={styles.cardBody}>
+              <Text style={styles.cardTitle}>Тренировка дня</Text>
+              <Text style={styles.cardSub}>10 индивидуальных заданий</Text>
+            </View>
+
+            <View style={styles.cardArrowRow}>
+              <View style={[styles.arrowCircle, styles.arrowCircleYellow]}>
+                <Text style={[styles.arrowText, styles.arrowTextYellow]}>›</Text>
+              </View>
+            </View>
           </TouchableOpacity>
 
           {/* 2. Выбрать тему */}
           <TouchableOpacity
-            style={[styles.menuCard, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}
+            style={[styles.modeCard, styles.cardSky]}
             onPress={() => onNavigate('topics')}
             activeOpacity={0.8}
           >
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardEmoji}>📖</Text>
+            <View style={styles.cardTopRow}>
+              <View style={styles.notebookIconBox}>
+                <Text style={styles.notebookFormula}>2+3=5</Text>
+                <Text style={styles.notebookPencil}>✏️</Text>
+              </View>
             </View>
-            <Text style={styles.cardTitle}>Выбрать тему</Text>
-            <Text style={styles.cardDesc}>12 тем программы 2 класса</Text>
+
+            <View style={styles.cardBody}>
+              <Text style={styles.cardTitle}>Выбрать тему</Text>
+              <Text style={styles.cardSub}>12 тем программы 2 класса</Text>
+            </View>
+
+            <View style={styles.cardArrowRow}>
+              <View style={[styles.arrowCircle, styles.arrowCircleSky]}>
+                <Text style={[styles.arrowText, styles.arrowTextSky]}>›</Text>
+              </View>
+            </View>
           </TouchableOpacity>
 
-          {/* 3. Переход через десяток (СПЕЦИАЛЬНЫЙ ТРЕНАЖЁР) */}
+          {/* 3. Переход через десяток */}
           <TouchableOpacity
-            style={[styles.menuCard, { backgroundColor: '#FFF7ED', borderColor: '#FFEDD5' }]}
+            style={[styles.modeCard, styles.cardRose]}
             onPress={() => onNavigate('tenTransition')}
             activeOpacity={0.8}
           >
-            <View style={styles.cardHeader}>
+            <View style={styles.cardTopRow}>
               <Text style={styles.cardEmoji}>🎯</Text>
-              <View style={[styles.badgeDaily, { backgroundColor: '#F97316' }]}>
-                <Text style={styles.badgeDailyText}>20...90</Text>
+              <View style={styles.badgeRed}>
+                <Text style={styles.badgeRedText}>20...90</Text>
               </View>
             </View>
-            <Text style={styles.cardTitle}>Переход через десяток</Text>
-            <Text style={styles.cardDesc}>Отдельный выбор десятков</Text>
+
+            <View style={styles.cardBody}>
+              <Text style={styles.cardTitle}>Переход через десяток</Text>
+              <Text style={styles.cardSub}>Отдельный выбор десятков</Text>
+            </View>
+
+            <View style={styles.cardArrowRow}>
+              <View style={[styles.arrowCircle, styles.arrowCircleRose]}>
+                <Text style={[styles.arrowText, styles.arrowTextRose]}>›</Text>
+              </View>
+            </View>
           </TouchableOpacity>
 
-          {/* 4. Примеры со скобками (СПЕЦИАЛЬНЫЙ РАЗДЕЛ) */}
+          {/* 4. Примеры со скобками */}
           <TouchableOpacity
-            style={[styles.menuCard, { backgroundColor: '#FDF2F8', borderColor: '#FCE7F3' }]}
+            style={[styles.modeCard, styles.cardPurple]}
             onPress={() => onNavigate('brackets')}
             activeOpacity={0.8}
           >
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardEmoji}>📐</Text>
-              <View style={[styles.badgeDaily, { backgroundColor: '#EC4899' }]}>
-                <Text style={styles.badgeDailyText}>2 этапа</Text>
+            <View style={styles.cardTopRow}>
+              <View style={styles.rulerPencilBox}>
+                <Text style={styles.cardEmoji}>📐</Text>
+                <Text style={styles.cardEmojiSmall}>✏️</Text>
+              </View>
+              <View style={styles.badgePurple}>
+                <Text style={styles.badgePurpleText}>2 этапа</Text>
               </View>
             </View>
-            <Text style={styles.cardTitle}>Примеры со скобками</Text>
-            <Text style={styles.cardDesc}>Ответ над скобками</Text>
+
+            <View style={styles.cardBody}>
+              <Text style={styles.cardTitle}>Примеры со скобками</Text>
+              <Text style={styles.cardSub}>Ответ над скобками</Text>
+            </View>
+
+            <View style={styles.cardArrowRow}>
+              <View style={[styles.arrowCircle, styles.arrowCirclePurple]}>
+                <Text style={[styles.arrowText, styles.arrowTextPurple]}>›</Text>
+              </View>
+            </View>
           </TouchableOpacity>
 
           {/* 5. Устный счёт */}
           <TouchableOpacity
-            style={[styles.menuCard, { backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }]}
-            onPress={() => onNavigate('quiz', { topicId: 'addsub' })}
+            style={[styles.modeCard, styles.cardGreen]}
+            onPress={() => onNavigate('quiz', { topicId: 'addition' })}
             activeOpacity={0.8}
           >
-            <View style={styles.cardHeader}>
+            <View style={styles.cardTopRow}>
               <Text style={styles.cardEmoji}>⚡</Text>
             </View>
-            <Text style={styles.cardTitle}>Устный счёт</Text>
-            <Text style={styles.cardDesc}>Быстрое сложение и вычитание</Text>
+
+            <View style={styles.cardBody}>
+              <Text style={styles.cardTitle}>Устный счёт</Text>
+              <Text style={styles.cardSub}>Быстрое сложение и вычитание</Text>
+            </View>
+
+            <View style={styles.cardArrowRow}>
+              <View style={[styles.arrowCircle, styles.arrowCircleGreen]}>
+                <Text style={[styles.arrowText, styles.arrowTextGreen]}>›</Text>
+              </View>
+            </View>
           </TouchableOpacity>
 
           {/* 6. Решаем задачи */}
           <TouchableOpacity
-            style={[styles.menuCard, { backgroundColor: '#ECFEFF', borderColor: '#A5F3FC' }]}
+            style={[styles.modeCard, styles.cardSky]}
             onPress={() => onNavigate('quiz', { topicId: 'wordProblems' })}
             activeOpacity={0.8}
           >
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardEmoji}>📝</Text>
+            <View style={styles.cardTopRow}>
+              <View style={styles.rulerPencilBox}>
+                <Text style={styles.cardEmoji}>📝</Text>
+                <Text style={styles.cardEmojiSmall}>✏️</Text>
+              </View>
             </View>
-            <Text style={styles.cardTitle}>Решаем задачи</Text>
-            <Text style={styles.cardDesc}>Текстовые задачи со схемами</Text>
+
+            <View style={styles.cardBody}>
+              <Text style={styles.cardTitle}>Решаем задачи</Text>
+              <Text style={styles.cardSub}>Текстовые задачи со схемами</Text>
+            </View>
+
+            <View style={styles.cardArrowRow}>
+              <View style={[styles.arrowCircle, styles.arrowCircleSky]}>
+                <Text style={[styles.arrowText, styles.arrowTextSky]}>›</Text>
+              </View>
+            </View>
           </TouchableOpacity>
 
           {/* 7. Мои ошибки */}
           <TouchableOpacity
-            style={[styles.menuCard, { backgroundColor: '#FEF2F2', borderColor: '#FECACA' }]}
+            style={[styles.modeCard, styles.cardRose]}
             onPress={() => onNavigate('errors')}
             activeOpacity={0.8}
           >
-            <View style={styles.cardHeader}>
+            <View style={styles.cardTopRow}>
               <Text style={styles.cardEmoji}>🛠️</Text>
             </View>
-            <Text style={styles.cardTitle}>Мои ошибки</Text>
-            <Text style={styles.cardDesc}>Работа над ошибками</Text>
+
+            <View style={styles.cardBody}>
+              <Text style={styles.cardTitle}>Мои ошибки</Text>
+              <Text style={styles.cardSub}>Работа над ошибками</Text>
+            </View>
+
+            <View style={styles.cardArrowRow}>
+              <View style={[styles.arrowCircle, styles.arrowCircleRose]}>
+                <Text style={[styles.arrowText, styles.arrowTextRose]}>›</Text>
+              </View>
+            </View>
           </TouchableOpacity>
 
           {/* 8. Мои достижения */}
           <TouchableOpacity
-            style={[styles.menuCard, { backgroundColor: '#FAF5FF', borderColor: '#E9D5FF' }]}
+            style={[styles.modeCard, styles.cardPurpleSoft]}
             onPress={() => onNavigate('achievements')}
             activeOpacity={0.8}
           >
-            <View style={styles.cardHeader}>
+            <View style={styles.cardTopRow}>
               <Text style={styles.cardEmoji}>🏆</Text>
             </View>
-            <Text style={styles.cardTitle}>Мои достижения</Text>
-            <Text style={styles.cardDesc}>Медали, кубки и награды</Text>
+
+            <View style={styles.cardBody}>
+              <Text style={styles.cardTitle}>Мои достижения</Text>
+              <Text style={styles.cardSub}>Медали, кубки и награды</Text>
+            </View>
+
+            <View style={styles.cardArrowRow}>
+              <View style={[styles.arrowCircle, styles.arrowCirclePurpleSoft]}>
+                <Text style={[styles.arrowText, styles.arrowTextPurpleSoft]}>›</Text>
+              </View>
+            </View>
           </TouchableOpacity>
         </View>
+
+        {/* Запас снизу под нижний бар */}
+        <View style={{ height: 20 }} />
       </ScrollView>
 
-      {/* Модальное окно доступа в раздел родителей */}
-      <ParentGateModal
-        visible={parentModalVisible}
-        onSuccess={() => {
-          setParentModalVisible(false);
-          onNavigate('parentDashboard');
-        }}
-        onClose={() => setParentModalVisible(false)}
-      />
-
-      {/* Модальное окно обновления приложения */}
+      {/* Модальное окно обновления */}
       <UpdateModal
         visible={showUpdateModal}
         updateInfo={availableUpdate}
@@ -379,83 +412,99 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   container: {
-    padding: 16,
-    paddingBottom: 32,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 24,
     maxWidth: 720,
     width: '100%',
     alignSelf: 'center',
   },
+  // 1. Верхняя шапка
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
-    paddingTop: 8,
   },
-  headerTitleRow: {
+  headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
-  headerIcon: {
-    fontSize: 34,
+  appIconBadge: {
+    width: 50,
+    height: 50,
+    borderRadius: 15,
+    overflow: 'hidden',
+    backgroundColor: '#FEF08A',
+    borderWidth: 1.5,
+    borderColor: '#FDE047',
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  appIconImage: {
+    width: '100%',
+    height: '100%',
+  },
+  titleColumn: {
+    justifyContent: 'center',
   },
   appName: {
     fontSize: 22,
-    fontWeight: 'bold',
-    color: '#1E293B',
+    fontWeight: '900',
+    color: '#0F172A',
+    letterSpacing: -0.3,
   },
   appSubtitle: {
     fontSize: 13,
+    fontWeight: '600',
+    color: '#475569',
+    marginTop: 1,
+  },
+  appMotto: {
+    fontSize: 12,
     color: '#64748B',
+    marginTop: 1,
   },
-  headerActions: {
+  settingsPillBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-  },
-  updateBadgeBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ECFDF5',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
-    borderColor: '#10B981',
-    gap: 4,
+    borderColor: '#CBD5E1',
+    borderRadius: 20,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+    gap: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
-  updateBadgeIcon: {
+  settingsPillIcon: {
     fontSize: 14,
   },
-  updateBadgeText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#065F46',
+  settingsPillText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#334155',
   },
+
+  // Баннер обновления
   updateBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ECFDF5',
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: '#10B981',
-    borderRadius: 18,
-    padding: 14,
-    marginBottom: 16,
-    gap: 12,
-    shadowColor: '#10B981',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  updateBannerIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#D1FAE5',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 16,
+    padding: 12,
+    marginBottom: 14,
+    gap: 10,
   },
   updateBannerIcon: {
     fontSize: 22,
@@ -464,238 +513,367 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   updateBannerTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '800',
     color: '#065F46',
-    marginBottom: 2,
   },
   updateBannerSub: {
     fontSize: 12,
     color: '#047857',
-    lineHeight: 16,
   },
   updateBannerArrow: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#10B981',
-  },
-  settingsBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    gap: 4,
-  },
-  settingsBtnIcon: {
-    fontSize: 14,
-  },
-  settingsBtnText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#334155',
-  },
-  parentBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EEF2FF',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#C7D2FE',
-    gap: 4,
-  },
-  parentBtnIcon: {
     fontSize: 16,
-  },
-  parentBtnText: {
-    fontSize: 12,
+    color: '#059669',
     fontWeight: 'bold',
-    color: '#4F46E5',
   },
-  statusBar: {
-    flexDirection: 'row',
+
+  // 2. Карточка показателей (Звёзды, Серия, Прогресс)
+  statsCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
-    justifyContent: 'space-around',
-    marginBottom: 16,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 6,
-      },
-      android: {
-        elevation: 2,
-      },
-      web: {
-        boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-      },
-    }),
-  },
-  statusItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 10,
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  statColumn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
-  statusEmoji: {
-    fontSize: 22,
+  statIcon: {
+    fontSize: 24,
   },
-  statusValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1E293B',
+  statTexts: {
+    justifyContent: 'center',
   },
-  statusLabel: {
-    fontSize: 11,
+  statValue: {
+    fontSize: 17,
+    fontWeight: '900',
+    color: '#0F172A',
+  },
+  statLabel: {
+    fontSize: 11.5,
     color: '#64748B',
+    marginTop: 1,
+    fontWeight: '500',
   },
-  statusDivider: {
+  statDivider: {
     width: 1,
+    height: 34,
     backgroundColor: '#E2E8F0',
   },
-  primaryActionButton: {
-    backgroundColor: '#4F46E5',
-    borderRadius: 20,
-    padding: 16,
+
+  // 3. Баннер «Начать заниматься» с совушкой
+  heroCard: {
+    backgroundColor: '#4338CA',
+    borderRadius: 22,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    borderBottomWidth: 5,
-    borderBottomColor: '#3730A3',
-    marginBottom: 20,
-    shadowColor: '#4F46E5',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
+    marginBottom: 18,
+    overflow: 'hidden',
+    position: 'relative',
+    shadowColor: '#4338CA',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 5,
   },
-  actionIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 14,
+  heroOwlImage: {
+    width: 76,
+    height: 76,
   },
-  primaryActionIcon: {
-    fontSize: 26,
-  },
-  primaryActionTexts: {
+  heroTextCol: {
     flex: 1,
+    paddingLeft: 12,
+    paddingRight: 6,
   },
-  primaryActionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+  heroTitle: {
+    fontSize: 18,
+    fontWeight: '900',
     color: '#FFFFFF',
-    marginBottom: 2,
+    marginBottom: 4,
+    letterSpacing: -0.2,
   },
-  primaryActionSubtitle: {
-    fontSize: 13,
+  heroSubtitle: {
+    fontSize: 12.5,
     color: '#E0E7FF',
+    lineHeight: 17,
+    fontWeight: '500',
   },
-  primaryActionArrow: {
-    fontSize: 24,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    marginLeft: 8,
-  },
-  curriculumBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EEF2FF',
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: '#818CF8',
-    padding: 14,
-    marginBottom: 20,
-    gap: 12,
-  },
-  curriculumBannerIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#E0E7FF',
+  heroRight: {
+    width: 50,
+    height: 60,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  curriculumBannerIcon: {
-    fontSize: 22,
-  },
-  curriculumBannerTextCol: {
-    flex: 1,
-  },
-  curriculumBannerTitle: {
-    fontSize: 15,
+  faintMath1: {
+    position: 'absolute',
+    top: -4,
+    right: 18,
+    fontSize: 17,
     fontWeight: 'bold',
-    color: '#312E81',
-    marginBottom: 2,
+    color: 'rgba(255, 255, 255, 0.22)',
   },
-  curriculumBannerSub: {
-    fontSize: 12,
-    color: '#4338CA',
-  },
-  curriculumBannerArrow: {
-    fontSize: 18,
-  },
-  sectionHeading: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1E293B',
-    marginBottom: 12,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    justifyContent: 'space-between',
-  },
-  menuCard: {
-    width: '48%',
-    minHeight: 124,
-    borderRadius: 18,
-    borderWidth: 2,
-    padding: 14,
-    justifyContent: 'space-between',
-    borderBottomWidth: 4,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  cardEmoji: {
-    fontSize: 28,
-  },
-  badgeDaily: {
-    backgroundColor: '#D97706',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  badgeDailyText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  cardTitle: {
+  faintMath2: {
+    position: 'absolute',
+    bottom: -4,
+    right: 22,
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#1E293B',
-    marginTop: 8,
+    color: 'rgba(255, 255, 255, 0.22)',
   },
-  cardDesc: {
-    fontSize: 12,
+  faintStar: {
+    position: 'absolute',
+    top: 14,
+    right: 48,
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.25)',
+  },
+  heroArrowBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroArrowText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+
+  // 4. Заголовок секции
+  sectionHeading: {
+    fontSize: 17,
+    fontWeight: '900',
+    color: '#0F172A',
+    marginBottom: 12,
+    paddingHorizontal: 2,
+  },
+
+  // 5. Сетка режимов
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  modeCard: {
+    width: '48%',
+    minHeight: 136,
+    borderRadius: 20,
+    padding: 13,
+    borderWidth: 1.5,
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+
+  // Цвета карточек
+  cardYellow: {
+    backgroundColor: '#FEFCE8',
+    borderColor: '#FEF08A',
+  },
+  cardSky: {
+    backgroundColor: '#F0F9FF',
+    borderColor: '#BAE6FD',
+  },
+  cardRose: {
+    backgroundColor: '#FFF1F2',
+    borderColor: '#FECDD3',
+  },
+  cardPurple: {
+    backgroundColor: '#FAF5FF',
+    borderColor: '#E9D5FF',
+  },
+  cardGreen: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#BBF7D0',
+  },
+  cardPurpleSoft: {
+    backgroundColor: '#F5F3FF',
+    borderColor: '#DDD6FE',
+  },
+
+  // Элементы карточки
+  cardTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  cardBody: {
+    flex: 1,
+    justifyContent: 'center',
+    marginVertical: 4,
+  },
+  cardTitle: {
+    fontSize: 14.5,
+    fontWeight: '900',
+    color: '#0F172A',
+    marginBottom: 2,
+    letterSpacing: -0.2,
+  },
+  cardSub: {
+    fontSize: 11.5,
     color: '#64748B',
-    marginTop: 2,
+    lineHeight: 15,
+  },
+  cardEmoji: {
+    fontSize: 26,
+  },
+  cardEmojiSmall: {
+    fontSize: 16,
+    marginLeft: -4,
+  },
+
+  // Блоки 1 2 3
+  blockRow: {
+    flexDirection: 'row',
+    gap: 3,
+  },
+  miniBlock: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  miniBlockText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+
+  // Тетрадь
+  notebookIconBox: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+    borderRadius: 8,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  notebookFormula: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#0284C7',
+  },
+  notebookPencil: {
+    fontSize: 12,
+  },
+  rulerPencilBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  // Бейджи
+  badgeOrange: {
+    backgroundColor: '#F59E0B',
+    borderRadius: 10,
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+  },
+  badgeOrangeText: {
+    color: '#FFFFFF',
+    fontSize: 9.5,
+    fontWeight: '800',
+  },
+  badgeRed: {
+    backgroundColor: '#EF4444',
+    borderRadius: 10,
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+  },
+  badgeRedText: {
+    color: '#FFFFFF',
+    fontSize: 9.5,
+    fontWeight: '800',
+  },
+  badgePurple: {
+    backgroundColor: '#A855F7',
+    borderRadius: 10,
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+  },
+  badgePurpleText: {
+    color: '#FFFFFF',
+    fontSize: 9.5,
+    fontWeight: '800',
+  },
+
+  // Стрелки внутри карточек
+  cardArrowRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 4,
+  },
+  arrowCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  arrowText: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    marginTop: -2,
+  },
+  arrowCircleYellow: {
+    backgroundColor: '#FEF08A',
+  },
+  arrowTextYellow: {
+    color: '#B45309',
+  },
+  arrowCircleSky: {
+    backgroundColor: '#E0F2FE',
+  },
+  arrowTextSky: {
+    color: '#0284C7',
+  },
+  arrowCircleRose: {
+    backgroundColor: '#FFE4E6',
+  },
+  arrowTextRose: {
+    color: '#E11D48',
+  },
+  arrowCirclePurple: {
+    backgroundColor: '#F3E8FF',
+  },
+  arrowTextPurple: {
+    color: '#9333EA',
+  },
+  arrowCircleGreen: {
+    backgroundColor: '#DCFCE7',
+  },
+  arrowTextGreen: {
+    color: '#16A34A',
+  },
+  arrowCirclePurpleSoft: {
+    backgroundColor: '#EDE9FE',
+  },
+  arrowTextPurpleSoft: {
+    color: '#7C3AED',
   },
 });

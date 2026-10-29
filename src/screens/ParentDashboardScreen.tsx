@@ -84,7 +84,7 @@ export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <Header title="Раздел для родителей" onBack={onBack} />
+      <Header title="Профиль и успеваемость" onBack={onBack} />
       <ScrollView contentContainerStyle={styles.container}>
         {/* Карточка управления школьной программой */}
         {onOpenCurriculum && (

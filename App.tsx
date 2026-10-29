@@ -15,6 +15,9 @@ import { AchievementsScreen } from './src/screens/AchievementsScreen';
 import { ParentDashboardScreen } from './src/screens/ParentDashboardScreen';
 import { CurriculumSettingsScreen } from './src/screens/CurriculumSettingsScreen';
 
+// Навигационная панель снизу
+import { BottomTabBar, TabName } from './src/components/BottomTabBar';
+
 type ScreenName =
   | 'home'
   | 'topics'
@@ -39,6 +42,32 @@ export default function App() {
   const goHome = () => {
     setCurrentScreen('home');
     setScreenParams({});
+  };
+
+  const isMainTabScreen = ['home', 'topics', 'achievements', 'parentDashboard'].includes(currentScreen);
+
+  const getActiveTab = (): TabName => {
+    if (currentScreen === 'topics') return 'topics';
+    if (currentScreen === 'achievements') return 'achievements';
+    if (currentScreen === 'parentDashboard') return 'profile';
+    return 'home';
+  };
+
+  const handleTabPress = (tab: TabName) => {
+    switch (tab) {
+      case 'home':
+        navigate('home');
+        break;
+      case 'topics':
+        navigate('topics');
+        break;
+      case 'achievements':
+        navigate('achievements');
+        break;
+      case 'profile':
+        navigate('parentDashboard');
+        break;
+    }
   };
 
   const renderScreen = () => {
@@ -104,6 +133,9 @@ export default function App() {
     <SafeAreaView style={styles.safeArea}>
       <ExpoStatusBar style="dark" />
       <View style={styles.container}>{renderScreen()}</View>
+      {isMainTabScreen && (
+        <BottomTabBar activeTab={getActiveTab()} onTabPress={handleTabPress} />
+      )}
     </SafeAreaView>
   );
 }
